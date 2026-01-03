@@ -516,7 +516,7 @@ Gulshan-2, Dhaka
           0
         );
         const serviceCharge = (orderTotal * serviceChargePercent) / 100;
-        const vatAmount = (orderTotal * vatPercent) / 100;
+        const vatAmount = ((orderTotal + serviceCharge) * vatPercent) / 100;
         const totalPayable = orderTotal + serviceCharge + vatAmount;
 
         const itemsHtml = items
