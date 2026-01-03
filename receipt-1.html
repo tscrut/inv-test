@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Receipt Editor</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background: #f0f0f0;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+      }
+
+      .editor-section,
+      .preview-section {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h2 {
+        margin-bottom: 20px;
+        color: #333;
+        font-size: 24px;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-group.font-selector {
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #555;
+        font-size: 14px;
+      }
+
+      select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        background: white;
+        cursor: pointer;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      input[type="datetime-local"],
+      textarea {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 60px;
+      }
+
+      .items-section {
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 2px solid #eee;
+      }
+
+      .item-row {
+        display: grid;
+        grid-template-columns: 80px 1fr 120px 50px;
+        gap: 10px;
+        margin-bottom: 10px;
+        align-items: end;
+      }
+
+      .item-row input {
+        padding: 6px 8px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+
+      .btn-primary {
+        background: #4caf50;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #45a049;
+      }
+
+      .btn-secondary {
+        background: #2196f3;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #0b7dda;
+      }
+
+      .btn-danger {
+        background: #f44336;
+        color: white;
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      .btn-danger:hover {
+        background: #da190b;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      /* Receipt Styles */
+      .receipt {
+        width: 300px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        line-height: 1.4;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .receipt-header {
+        text-align: center;
+        margin-bottom: 15px;
+      }
+
+      .receipt-header h1 {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 8px;
+        letter-spacing: 2px;
+      }
+
+      .receipt-header p {
+        margin: 3px 0;
+        font-size: 11px;
+      }
+
+      .receipt-divider {
+        border-bottom: 1px dashed #999;
+        margin: 10px 0;
+      }
+
+      .invoice-title {
+        text-align: center;
+        font-size: 16px;
+        font-weight: bold;
+        margin: 15px 0;
+        letter-spacing: 3px;
+      }
+
+      .receipt-info {
+        margin-bottom: 15px;
+        font-size: 11px;
+      }
+
+      .receipt-info div {
+        margin: 3px 0;
+      }
+
+      .items-table {
+        width: 100%;
+        margin: 15px 0;
+      }
+
+      .items-header {
+        display: grid;
+        grid-template-columns: 40px 1fr 70px;
+        font-weight: bold;
+        margin-bottom: 8px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #333;
+      }
+
+      .item-line {
+        display: grid;
+        grid-template-columns: 40px 1fr 70px;
+        margin: 5px 0;
+      }
+
+      .item-qty {
+        text-align: left;
+      }
+
+      .item-name {
+        text-align: left;
+      }
+
+      .item-price {
+        text-align: right;
+      }
+
+      .receipt-totals {
+        margin-top: 15px;
+        padding-top: 10px;
+        border-top: 1px dashed #999;
+      }
+
+      .total-line {
+        display: flex;
+        justify-content: space-between;
+        margin: 5px 0;
+      }
+
+      .total-line.grand-total {
+        font-weight: bold;
+        font-size: 13px;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #333;
+      }
+
+      .receipt-footer {
+        text-align: center;
+        margin-top: 15px;
+        padding-top: 10px;
+        border-top: 1px dashed #999;
+        font-size: 13px;
+        font-weight: bold;
+      }
+
+      @media print {
+        body {
+          background: white;
+          padding: 0;
+        }
+
+        .container {
+          display: block;
+        }
+
+        .editor-section {
+          display: none;
+        }
+
+        .preview-section {
+          box-shadow: none;
+          padding: 0;
+        }
+
+        .receipt {
+          box-shadow: none;
+        }
+
+        .button-group {
+          display: none;
+        }
+      }
+
+      @media (max-width: 1200px) {
+        .container {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Editor Section -->
+      <div class="editor-section">
+        <h2>Edit Receipt Details</h2>
+
+        <div class="form-group font-selector">
+          <label>Receipt Font</label>
+          <select id="fontSelect" onchange="changeFont()">
+            <option value="'Courier New', monospace">
+              Courier New (Classic Thermal)
+            </option>
+            <option value="'Consolas', monospace">
+              Consolas (Modern Monospace)
+            </option>
+            <option value="'Monaco', monospace">Monaco (Apple Thermal)</option>
+            <option value="'Lucida Console', monospace">
+              Lucida Console (Dot Matrix)
+            </option>
+            <option value="'OCR A Std', 'OCR A', monospace">
+              OCR-A (Bank Receipt)
+            </option>
+            <option value="'Liberation Mono', 'Courier New', monospace">
+              Liberation Mono
+            </option>
+            <option value="'DejaVu Sans Mono', monospace">
+              DejaVu Sans Mono
+            </option>
+            <option value="'Andale Mono', monospace">
+              Andale Mono (Sharp)
+            </option>
+            <option value="'Roboto Mono', monospace">
+              Roboto Mono (Clean)
+            </option>
+            <option value="'Source Code Pro', monospace">
+              Source Code Pro
+            </option>
+            <option value="'PT Mono', monospace">PT Mono (Compact)</option>
+            <option value="'Inconsolata', monospace">Inconsolata</option>
+            <option value="'Ubuntu Mono', monospace">Ubuntu Mono</option>
+            <option value="'Fira Mono', monospace">Fira Mono</option>
+            <option value="'Space Mono', monospace">Space Mono (Bold)</option>
+            <option value="'Arial', sans-serif">Arial (Non-monospace)</option>
+            <option value="'Helvetica', sans-serif">Helvetica</option>
+            <option value="'Verdana', sans-serif">Verdana (Wide)</option>
+            <option value="'Tahoma', sans-serif">Tahoma (Compact)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Restaurant Name</label>
+          <input type="text" id="restaurantName" value="Thai Signatures" />
+        </div>
+
+        <div class="form-group">
+          <label>Address</label>
+          <textarea id="address">
+House No. 6/A, Road No. 113
+Gulshan-2, Dhaka
+</textarea
+          >
+        </div>
+
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="text" id="hotline" value="016 3966 8252" />
+        </div>
+
+        <div class="form-group">
+          <label>BIN</label>
+          <input type="text" id="bin" value="001200761-0101; MUSAK-6.3" />
+        </div>
+
+        <div class="form-group">
+          <label>Table</label>
+          <input type="text" id="table" value="F 30" />
+        </div>
+
+        <div class="form-group">
+          <label>Served By</label>
+          <input type="text" id="servedBy" value="Shawan" />
+        </div>
+
+        <div class="form-group">
+          <label>Date & Time</label>
+          <input type="datetime-local" id="datetime" value="2025-12-01T18:59" />
+        </div>
+
+        <div class="form-group">
+          <label>Covers</label>
+          <input type="number" id="covers" value="6" />
+        </div>
+
+        <div class="form-group">
+          <label>Order ID</label>
+          <input type="text" id="orderId" value="220050992" />
+        </div>
+
+        <div class="items-section">
+          <h3>Items</h3>
+          <div id="itemsContainer"></div>
+          <button class="btn btn-primary" onclick="addItem()">
+            + Add Item
+          </button>
+        </div>
+
+        <div class="form-group" style="margin-top: 20px">
+          <label>Service Charge (%)</label>
+          <input type="number" id="serviceCharge" value="10" step="0.01" />
+        </div>
+
+        <div class="form-group">
+          <label>VAT (%)</label>
+          <input type="number" id="vat" value="5" step="0.01" />
+        </div>
+
+        <div class="button-group">
+          <button class="btn btn-secondary" onclick="updatePreview()">
+            Update Preview
+          </button>
+          <button class="btn btn-primary" onclick="window.print()">
+            Print Receipt
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Section -->
+      <div class="preview-section">
+        <!-- <h2>Receipt Preview</h2> -->
+        <div class="receipt" id="receiptPreview"></div>
+      </div>
+    </div>
+
+    <script>
+      // Initial items from the receipt
+      let items = [
+        { qty: 1, name: "Special Appetizer Platter", price: 795 },
+        { qty: 1, name: "Tom Yum Soup with Seafood", price: 995 },
+        { qty: 3, name: "Chicken Dumpling", price: 645 },
+        { qty: 1, name: "Prawn Chili Paste", price: 895 },
+        { qty: 2, name: "Kung Pao Chicken", price: 745 },
+        { qty: 1, name: "Vegetable Clear Soup with Chicken", price: 695 },
+        { qty: 1, name: "Mixed Tom Yum Soup", price: 795 },
+        { qty: 4, name: "Coconut Soup with Prawn", price: 1095 },
+      ];
+
+      function changeFont() {
+        const fontValue = document.getElementById("fontSelect").value;
+        document.getElementById("receiptPreview").style.fontFamily = fontValue;
+      }
+
+      function renderItems() {
+        const container = document.getElementById("itemsContainer");
+        container.innerHTML = items
+          .map(
+            (item, index) => `
+                <div class="item-row">
+                    <input type="number" value="${item.qty}" onchange="updateItem(${index}, 'qty', this.value)" placeholder="Qty" min="1">
+                    <input type="text" value="${item.name}" onchange="updateItem(${index}, 'name', this.value)" placeholder="Item Name">
+                    <input type="number" value="${item.price}" onchange="updateItem(${index}, 'price', this.value)" placeholder="Price" step="0.01">
+                    <button class="btn btn-danger" onclick="removeItem(${index})">×</button>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      function addItem() {
+        items.push({ qty: 1, name: "New Item", price: 0 });
+        renderItems();
+      }
+
+      function removeItem(index) {
+        items.splice(index, 1);
+        renderItems();
+      }
+
+      function updateItem(index, field, value) {
+        items[index][field] = field === "name" ? value : parseFloat(value) || 0;
+      }
+
+      function formatDate(datetimeValue) {
+        const date = new Date(datetimeValue);
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        let hours = date.getHours();
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        const seconds = String(date.getSeconds()).padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+        hours = String(hours).padStart(2, "0");
+
+        return {
+          date: `${day}/${month}/${year}`,
+          time: `${hours}:${minutes}:${seconds} ${ampm}`,
+        };
+      }
+
+      function updatePreview() {
+        const restaurantName = document.getElementById("restaurantName").value;
+        const address = document.getElementById("address").value;
+        const hotline = document.getElementById("hotline").value;
+        const bin = document.getElementById("bin").value;
+        const table = document.getElementById("table").value;
+        const servedBy = document.getElementById("servedBy").value;
+        const datetime = document.getElementById("datetime").value;
+        const covers = document.getElementById("covers").value;
+        const orderId = document.getElementById("orderId").value;
+        const serviceChargePercent =
+          parseFloat(document.getElementById("serviceCharge").value) || 0;
+        const vatPercent =
+          parseFloat(document.getElementById("vat").value) || 0;
+
+        const { date, time } = formatDate(datetime);
+
+        const orderTotal = items.reduce(
+          (sum, item) => sum + item.qty * item.price,
+          0
+        );
+        const serviceCharge = (orderTotal * serviceChargePercent) / 100;
+        const vatAmount = (orderTotal * vatPercent) / 100;
+        const totalPayable = orderTotal + serviceCharge + vatAmount;
+
+        const itemsHtml = items
+          .map(
+            (item) => `
+                <div class="item-line">
+                    <div class="item-qty">${item.qty}</div>
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-price">${item.price.toFixed(0)}</div>
+                </div>
+            `
+          )
+          .join("");
+
+        document.getElementById("receiptPreview").innerHTML = `
+                <div class="receipt-header">
+                    <h1>${restaurantName}</h1>
+                    ${address
+                      .split("\n")
+                      .map((line) => `<p>${line}</p>`)
+                      .join("")}
+                    <p>Phone: ${hotline}</p>
+                    <p>BIN: ${bin}</p>
+                </div>
+                
+                <div class="receipt-divider"></div>
+
+                <div class="invoice-title">Invoice</div>
+
+                <div class="receipt-info">
+                    <div>Date: ${date}&nbsp;&nbsp;Time: ${time}</div>
+                    <div>Order ID: ${orderId}</div>
+                </div>
+
+                <div class="receipt-divider"></div>
+
+                <div class="items-table">
+                    <div class="items-header">
+                        <div>Qty</div>
+                        <div>Item Name</div>
+                        <div style="text-align: right;">Price</div>
+                    </div>
+                    ${itemsHtml}
+                </div>
+
+                <div class="receipt-divider"></div>
+
+                <div class="receipt-totals">
+                    <div class="total-line">
+                        <span>Order Total:</span>
+                        <span>${orderTotal.toFixed(0)}</span>
+                    </div>
+                    <div class="total-line">
+                        <span>S Charge (${serviceChargePercent}%):</span>
+                        <span>${serviceCharge.toFixed(0)}</span>
+                    </div>
+                    <div class="total-line">
+                        <span>VAT (${vatPercent}%):</span>
+                        <span>${vatAmount.toFixed(2)}</span>
+                    </div>
+                    <div class="receipt-divider"></div>
+                    <div class="total-line grand-total">
+                        <span>Total Payable:</span>
+                        <span>${totalPayable.toFixed(2)}</span>
+                    </div>
+                </div>
+
+                <div class="receipt-footer">
+                    Thank You
+                </div>
+            `;
+      }
+
+      // Initialize
+      renderItems();
+      updatePreview();
+    </script>
+  </body>
+</html>

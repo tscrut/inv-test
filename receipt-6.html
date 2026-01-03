@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Professional Receipt Designer</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=VT323&family=Inter:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --paper-width: 320px;
+        --receipt-font: "Courier New", Courier, monospace;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background: #f0f2f5;
+        margin: 0;
+        display: flex;
+        height: 100vh;
+      }
+
+      /* EDITOR SIDEBAR */
+      .editor {
+        width: 450px;
+        background: white;
+        padding: 20px;
+        overflow-y: auto;
+        border-right: 1px solid #ddd;
+        box-sizing: border-box;
+      }
+      .section-box {
+        background: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        position: relative;
+      }
+      .remove-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        color: #dc3545;
+        cursor: pointer;
+        font-size: 18px;
+        border: none;
+        background: none;
+      }
+
+      h2 {
+        margin-top: 0;
+        font-size: 20px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+      }
+      h3 {
+        font-size: 14px;
+        margin-bottom: 10px;
+        color: #333;
+        text-transform: uppercase;
+      }
+
+      label {
+        display: block;
+        font-size: 11px;
+        font-weight: bold;
+        color: #555;
+        margin: 8px 0 4px;
+        text-transform: uppercase;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-family: inherit;
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .btn {
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        flex: 1;
+        transition: opacity 0.2s;
+      }
+      .btn-add {
+        background: #007bff;
+        color: white;
+      }
+      .btn-export {
+        background: #000;
+        color: white;
+        width: 100%;
+        font-size: 16px;
+        margin-top: 10px;
+      }
+      .btn:hover {
+        opacity: 0.8;
+      }
+
+      /* RECEIPT PREVIEW */
+      .preview {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 40px;
+        background: #525659;
+        overflow-y: auto;
+      }
+      #receipt {
+        width: var(--paper-width);
+        background: white;
+        padding: 25px;
+        font-family: var(--receipt-font);
+        font-size: 14px;
+        color: #000;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      }
+
+      .logo-wrap {
+        text-align: center;
+        margin-bottom: 15px;
+      }
+      .logo-wrap img {
+        max-width: 120px;
+        filter: grayscale(1) contrast(1.2);
+      }
+
+      .centered {
+        text-align: center;
+      }
+      .item-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 3px 0;
+        line-height: 1.2;
+      }
+      .qty-col {
+        width: 35px;
+      }
+      .name-col {
+        flex: 1;
+      }
+      .price-col {
+        width: 85px;
+        text-align: right;
+      }
+
+      /* DIVIDER STYLES */
+      .div-none {
+        margin: 12px 0;
+      }
+      .div-dashed {
+        border-top: 1px dashed #000;
+        margin: 12px 0;
+      }
+      .div-dotted {
+        border-top: 2px dotted #000;
+        margin: 12px 0;
+      }
+      .div-solid {
+        border-top: 1px solid #000;
+        margin: 12px 0;
+      }
+      .div-double {
+        border-top: 3px double #000;
+        margin: 12px 0;
+        height: 0;
+      }
+      .div-bold {
+        border-top: 4px solid #000;
+        margin: 12px 0;
+      }
+
+      @media print {
+        .editor {
+          display: none;
+        }
+        .preview {
+          background: white;
+          padding: 0;
+        }
+        #receipt {
+          box-shadow: none;
+          width: 80mm;
+          padding: 5mm;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="editor">
+      <h2>Receipt Designer</h2>
+
+      <div class="section-box" style="border-left: 5px solid #000">
+        <h3>Global Styles</h3>
+        <label>Font Family</label>
+        <select id="fontSelector" onchange="updateFont(this.value)">
+          <optgroup label="Classic Thermal">
+            <option value="'Courier New', Courier, monospace">
+              Courier New (Standard)
+            </option>
+            <option value="'Roboto Mono', monospace">
+              Roboto Mono (Clean)
+            </option>
+            <option value="'VT323', monospace">Retro Dot Matrix</option>
+            <option value="'Lucida Console', Monaco, monospace">
+              Lucida Console
+            </option>
+          </optgroup>
+          <optgroup label="Modern Digital">
+            <option value="'Inter', sans-serif">Inter (Modern)</option>
+            <option value="Arial, sans-serif">Arial</option>
+            <option value="'Segoe UI', Tahoma, sans-serif">Segoe UI</option>
+          </optgroup>
+          <optgroup label="Elegant Serif">
+            <option value="'Times New Roman', Times, serif">
+              Times New Roman
+            </option>
+            <option value="Georgia, serif">Georgia</option>
+          </optgroup>
+        </select>
+
+        <label>Base Font Size (px)</label>
+        <input type="number" id="baseFontSize" value="14" oninput="render()" />
+      </div>
+
+      <div class="section-box">
+        <label>Shop Logo</label>
+        <input type="file" accept="image/*" onchange="updateLogo(this)" />
+      </div>
+
+      <div id="editor-sections"></div>
+
+      <div class="controls">
+        <button class="btn btn-add" onclick="addSection('text')">
+          + Add Text Section
+        </button>
+        <button class="btn btn-add" onclick="addSection('items')">
+          + Add Item List
+        </button>
+      </div>
+
+      <div class="section-box">
+        <label>VAT %</label>
+        <input type="number" id="vatInput" value="5" oninput="render()" />
+      </div>
+
+      <button class="btn btn-export" onclick="window.print()">
+        PRINT / EXPORT PDF
+      </button>
+    </div>
+
+    <div class="preview">
+      <div id="receipt">
+        <div class="logo-wrap" id="logoPreview" style="display: none">
+          <img id="logoImg" src="" />
+        </div>
+        <div id="receipt-content"></div>
+      </div>
+    </div>
+
+    <script>
+      // Initial State
+      let sections = [
+        {
+          id: 1,
+          type: "text",
+          content: "NORTH END COFFEE\nCity Bank Center, Dhaka",
+          align: "centered",
+          divider: "dashed",
+        },
+        {
+          id: 2,
+          type: "items",
+          items: [
+            { qty: 1, name: "Latte Regular", price: 280.5 },
+            { qty: 1, name: "Kazi Tea", price: 102.0 },
+          ],
+          divider: "double",
+        },
+      ];
+
+      function updateFont(val) {
+        document.documentElement.style.setProperty("--receipt-font", val);
+        render();
+      }
+
+      function updateLogo(input) {
+        if (input.files && input.files[0]) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            document.getElementById("logoImg").src = e.target.result;
+            document.getElementById("logoPreview").style.display = "block";
+          };
+          reader.readAsDataURL(input.files[0]);
+        }
+      }
+
+      function addSection(type) {
+        const id = Date.now();
+        if (type === "text") {
+          sections.push({
+            id,
+            type: "text",
+            content: "New Info Section",
+            align: "centered",
+            divider: "dashed",
+          });
+        } else {
+          sections.push({
+            id,
+            type: "items",
+            items: [{ qty: 1, name: "New Item", price: 0 }],
+            divider: "solid",
+          });
+        }
+        render();
+      }
+
+      function removeSection(id) {
+        sections = sections.filter((s) => s.id !== id);
+        render();
+      }
+
+      function addItem(sectionId) {
+        const section = sections.find((s) => s.id === sectionId);
+        section.items.push({ qty: 1, name: "", price: 0 });
+        render();
+      }
+
+      function render() {
+        renderEditor();
+        renderReceipt();
+      }
+
+      function renderEditor() {
+        const container = document.getElementById("editor-sections");
+        container.innerHTML = "";
+
+        sections.forEach((s, idx) => {
+          const box = document.createElement("div");
+          box.className = "section-box";
+
+          let html = `<button class="remove-btn" onclick="removeSection(${s.id})">✕</button>`;
+          html += `<h3>Section: ${s.type.toUpperCase()}</h3>`;
+
+          if (s.type === "text") {
+            html += `<textarea oninput="sections[${idx}].content=this.value; render()">${s.content}</textarea>`;
+            html += `<select onchange="sections[${idx}].align=this.value; render()">
+                            <option value="centered" ${
+                              s.align === "centered" ? "selected" : ""
+                            }>Centered</option>
+                            <option value="left" ${
+                              s.align === "left" ? "selected" : ""
+                            }>Left Aligned</option>
+                         </select>`;
+          } else {
+            s.items.forEach((item, iIdx) => {
+              html += `<div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <input type="number" style="width:55px" value="${item.qty}" oninput="sections[${idx}].items[${iIdx}].qty=this.value; render()">
+                        <input type="text" value="${item.name}" placeholder="Item Name" oninput="sections[${idx}].items[${iIdx}].name=this.value; render()">
+                        <input type="number" style="width:90px" value="${item.price}" oninput="sections[${idx}].items[${iIdx}].price=this.value; render()">
+                    </div>`;
+            });
+            html += `<button class="btn btn-add" style="font-size:11px; padding:5px" onclick="addItem(${s.id})">+ Add New Item Row</button>`;
+          }
+
+          html += `<label>End This Section With:</label>
+                <select onchange="sections[${idx}].divider=this.value; render()">
+                    <option value="none" ${
+                      s.divider === "none" ? "selected" : ""
+                    }>No Divider</option>
+                    <option value="dashed" ${
+                      s.divider === "dashed" ? "selected" : ""
+                    }>Dashed Line (---)</option>
+                    <option value="dotted" ${
+                      s.divider === "dotted" ? "selected" : ""
+                    }>Dotted Line (...)</option>
+                    <option value="solid" ${
+                      s.divider === "solid" ? "selected" : ""
+                    }>Thin Solid Line</option>
+                    <option value="double" ${
+                      s.divider === "double" ? "selected" : ""
+                    }>Double Line (===)</option>
+                    <option value="bold" ${
+                      s.divider === "bold" ? "selected" : ""
+                    }>Bold Thick Line</option>
+                </select>`;
+
+          box.innerHTML = html;
+          container.appendChild(box);
+        });
+      }
+
+      function renderReceipt() {
+        const container = document.getElementById("receipt-content");
+        container.innerHTML = "";
+        let gross = 0;
+
+        // Apply Font Size
+        document.getElementById("receipt").style.fontSize =
+          document.getElementById("baseFontSize").value + "px";
+
+        sections.forEach((s) => {
+          const div = document.createElement("div");
+          if (s.type === "text") {
+            div.className = s.align === "centered" ? "centered" : "";
+            div.style.whiteSpace = "pre-line";
+            div.innerText = s.content;
+          } else {
+            let itemsHtml = `<div class="item-row" style="font-weight:bold">
+                    <span class="qty-col">QTY</span>
+                    <span class="name-col">ITEM NAME</span>
+                    <span class="price-col">PRICE</span>
+                </div>`;
+            s.items.forEach((item) => {
+              const total =
+                (parseFloat(item.qty) || 0) * (parseFloat(item.price) || 0);
+              gross += total;
+              itemsHtml += `<div class="item-row">
+                        <span class="qty-col">${item.qty}</span>
+                        <span class="name-col">${item.name || "---"}</span>
+                        <span class="price-col">${total.toFixed(2)}</span>
+                    </div>`;
+            });
+            div.innerHTML = itemsHtml;
+          }
+
+          container.appendChild(div);
+
+          // Add the selected divider
+          const divider = document.createElement("div");
+          divider.className = `div-${s.divider}`;
+          container.appendChild(divider);
+        });
+
+        // Totals Section
+        const vatRate =
+          parseFloat(document.getElementById("vatInput").value) || 0;
+        const vatAmt = gross * (vatRate / 100);
+        const total = gross + vatAmt;
+
+        const totalDiv = document.createElement("div");
+        totalDiv.innerHTML = `
+            <div class="item-row"><span>GROSS TOTAL:</span><span>${gross.toFixed(
+              2
+            )}</span></div>
+            <div class="item-row"><span>VAT (${vatRate}%):</span><span>${vatAmt.toFixed(
+          2
+        )}</span></div>
+            <div class="div-double"></div>
+            <div class="item-row" style="font-weight:bold; font-size:1.2em"><span>NET TOTAL:</span><span>${total.toFixed(
+              2
+            )}</span></div>
+            <div class="div-bold"></div>
+            <div class="centered" style="margin-top:10px">*** THANK YOU ***</div>
+        `;
+        container.appendChild(totalDiv);
+      }
+
+      // Initialize
+      render();
+    </script>
+  </body>
+</html>

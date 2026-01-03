@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ultimate Receipt Designer</title>
+    <style>
+      :root {
+        --paper-width: 320px;
+        --editor-bg: #f8f9fa;
+      }
+
+      body {
+        font-family: "Inter", -apple-system, sans-serif;
+        background-color: #e9ecef;
+        margin: 0;
+        display: flex;
+        height: 100vh;
+      }
+
+      /* --- EDITOR SIDEBAR --- */
+      .sidebar {
+        width: 400px;
+        background: white;
+        padding: 25px;
+        overflow-y: auto;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+      }
+
+      .section-card {
+        background: var(--editor-bg);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+      }
+
+      h3 {
+        margin-top: 0;
+        font-size: 16px;
+        color: #333;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #666;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 12px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        box-sizing: border-box;
+      }
+
+      .btn {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .btn-add {
+        background: #28a745;
+        color: white;
+        width: 100%;
+      }
+      .btn-print {
+        background: #000;
+        color: white;
+        width: 100%;
+        font-size: 16px;
+        margin-top: 20px;
+      }
+      .btn-remove {
+        background: #dc3545;
+        color: white;
+        padding: 5px 10px;
+        margin-top: -5px;
+      }
+
+      .item-input-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 40px;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      /* --- RECEIPT PREVIEW --- */
+      .preview-pane {
+        flex-grow: 1;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 40px;
+        overflow-y: auto;
+      }
+
+      #receipt-render {
+        width: var(--paper-width);
+        background: white;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        font-family: "Courier New", Courier, monospace;
+        color: #000;
+        font-size: 14px;
+      }
+
+      .logo-container {
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      .logo-container img {
+        max-width: 100px;
+        height: auto;
+        filter: grayscale(1);
+      }
+
+      .receipt-header {
+        text-align: center;
+        margin-bottom: 15px;
+      }
+      .shop-name {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 5px;
+        display: block;
+      }
+
+      .divider {
+        width: 100%;
+        margin: 8px 0;
+        pointer-events: none;
+      }
+      .divider.dashed {
+        border-top: 1px dashed #000;
+      }
+      .divider.dotted {
+        border-top: 2px dotted #000;
+      }
+      .divider.double {
+        border-top: 3px double #000;
+      }
+
+      .flex-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 2px 0;
+      }
+      .items-table {
+        margin: 15px 0;
+      }
+      .item-line {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 4px;
+      }
+      .col-qty {
+        width: 35px;
+      }
+      .col-name {
+        flex-grow: 1;
+      }
+      .col-total {
+        width: 80px;
+        text-align: right;
+      }
+
+      .total-section {
+        margin-top: 10px;
+      }
+      .grand-total {
+        font-size: 18px;
+        font-weight: bold;
+        margin-top: 5px;
+      }
+
+      .footer-note {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 12px;
+        white-space: pre-line;
+      }
+
+      /* PRINT SETTINGS */
+      @media print {
+        body {
+          background: white;
+        }
+        .sidebar {
+          display: none;
+        }
+        .preview-pane {
+          padding: 0;
+        }
+        #receipt-render {
+          box-shadow: none;
+          width: 80mm;
+          padding: 5mm;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar">
+      <h2>Receipt Settings</h2>
+
+      <div class="section-card">
+        <h3>1. Branding</h3>
+        <label>Shop Logo</label>
+        <input
+          type="file"
+          id="logoUpload"
+          accept="image/*"
+          onchange="handleLogo(this)"
+        />
+        <label>Shop Name</label>
+        <input
+          type="text"
+          id="inName"
+          value="COFFEE HOUSE"
+          oninput="update()"
+        />
+        <label>Header Details (Address/Tax ID)</label>
+        <textarea id="inHeader" rows="3" oninput="update()">
+123 Brew Lane, Caffeine City&#10;BIN: 000-466-455&#10;Phone: +1 234 567 890</textarea
+        >
+      </div>
+
+      <div class="section-card">
+        <h3>2. Style Options</h3>
+        <label>Divider Style</label>
+        <select id="inDivider" onchange="update()">
+          <option value="dashed">Dashed (---)</option>
+          <option value="dotted">Dotted (...)</option>
+          <option value="double">Double Line (===)</option>
+        </select>
+        <label>Font Size (px)</label>
+        <input
+          type="number"
+          id="inFontSize"
+          value="14"
+          min="10"
+          max="20"
+          oninput="update()"
+        />
+      </div>
+
+      <div class="section-card">
+        <h3>3. Items</h3>
+        <div id="item-list"></div>
+        <button class="btn btn-add" onclick="addItem()">+ Add Item</button>
+      </div>
+
+      <div class="section-card">
+        <h3>4. Taxes & Footer</h3>
+        <label>VAT / Tax (%)</label>
+        <input type="number" id="inVat" value="5" oninput="update()" />
+        <label>Footer Message</label>
+        <textarea id="inFooter" rows="3" oninput="update()">
+Thank you for visiting!&#10;Follow us @CoffeeHouse&#10;Wifi: BREW2024 / Pass: latte123</textarea
+        >
+      </div>
+
+      <button class="btn btn-print" onclick="window.print()">
+        EXPORT / PRINT
+      </button>
+    </div>
+
+    <div class="preview-pane">
+      <div id="receipt-render">
+        <div class="logo-container" id="resLogoContainer" style="display: none">
+          <img id="resLogo" src="" />
+        </div>
+
+        <div class="receipt-header">
+          <span class="shop-name" id="resName">COFFEE HOUSE</span>
+          <div id="resHeader" style="white-space: pre-line"></div>
+        </div>
+
+        <div id="div1" class="divider dashed"></div>
+
+        <div class="flex-row">
+          <span>Date: <span id="resDate"></span></span>
+          <span>Time: <span id="resTime"></span></span>
+        </div>
+        <div class="flex-row">
+          <span>Receipt #: <span id="resTicket">#88291</span></span>
+        </div>
+
+        <div id="div2" class="divider dashed"></div>
+
+        <div class="items-table">
+          <div class="item-line" style="font-weight: bold">
+            <span class="col-qty">QTY</span>
+            <span class="col-name">ITEM</span>
+            <span class="col-total">TOTAL</span>
+          </div>
+          <div id="resItemsList"></div>
+        </div>
+
+        <div id="div3" class="divider dashed"></div>
+
+        <div class="total-section">
+          <div class="flex-row">
+            <span>Subtotal:</span>
+            <span id="resSubtotal">0.00</span>
+          </div>
+          <div class="flex-row">
+            <span>VAT (<span id="resVatRate">0</span>%):</span>
+            <span id="resVatVal">0.00</span>
+          </div>
+          <div class="flex-row grand-total">
+            <span>TOTAL:</span>
+            <span id="resGrand">0.00</span>
+          </div>
+        </div>
+
+        <div id="div4" class="divider dashed"></div>
+
+        <div class="footer-note" id="resFooter"></div>
+      </div>
+    </div>
+
+    <script>
+      let items = [{ name: "Vanilla Latte", qty: 1, price: 4.5 }];
+
+      function handleLogo(input) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          document.getElementById("resLogo").src = e.target.result;
+          document.getElementById("resLogoContainer").style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function addItem() {
+        items.push({ name: "", qty: 1, price: 0 });
+        renderInputs();
+        update();
+      }
+
+      function removeItem(index) {
+        items.splice(index, 1);
+        renderInputs();
+        update();
+      }
+
+      function renderInputs() {
+        const container = document.getElementById("item-list");
+        container.innerHTML = "";
+        items.forEach((item, index) => {
+          const row = document.createElement("div");
+          row.className = "item-input-row";
+          row.innerHTML = `
+                <input type="text" value="${item.name}" placeholder="Item" oninput="items[${index}].name=this.value; update()">
+                <input type="number" value="${item.qty}" placeholder="Qty" oninput="items[${index}].qty=this.value; update()">
+                <input type="number" value="${item.price}" placeholder="Price" oninput="items[${index}].price=this.value; update()">
+                <button class="btn btn-remove" onclick="removeItem(${index})">×</button>
+            `;
+          container.appendChild(row);
+        });
+      }
+
+      function update() {
+        // Text updates
+        document.getElementById("resName").innerText =
+          document.getElementById("inName").value;
+        document.getElementById("resHeader").innerText =
+          document.getElementById("inHeader").value;
+        document.getElementById("resFooter").innerText =
+          document.getElementById("inFooter").value;
+
+        // Style updates
+        const style = document.getElementById("inDivider").value;
+        document.querySelectorAll(".divider").forEach((d) => {
+          d.className = "divider " + style;
+        });
+        document.getElementById("receipt-render").style.fontSize =
+          document.getElementById("inFontSize").value + "px";
+
+        // Calculations
+        let subtotal = 0;
+        let itemsHTML = "";
+        items.forEach((item) => {
+          const total =
+            (parseFloat(item.qty) || 0) * (parseFloat(item.price) || 0);
+          subtotal += total;
+          itemsHTML += `
+                <div class="item-line">
+                    <span class="col-qty">${item.qty}</span>
+                    <span class="col-name">${item.name || "Unnamed Item"}</span>
+                    <span class="col-total">${total.toFixed(2)}</span>
+                </div>
+            `;
+        });
+
+        const vatRate = parseFloat(document.getElementById("inVat").value) || 0;
+        const vatVal = subtotal * (vatRate / 100);
+
+        document.getElementById("resItemsList").innerHTML = itemsHTML;
+        document.getElementById("resSubtotal").innerText = subtotal.toFixed(2);
+        document.getElementById("resVatRate").innerText = vatRate;
+        document.getElementById("resVatVal").innerText = vatVal.toFixed(2);
+        document.getElementById("resGrand").innerText = (
+          subtotal + vatVal
+        ).toFixed(2);
+
+        // Date/Time
+        const now = new Date();
+        document.getElementById("resDate").innerText = now.toLocaleDateString();
+        document.getElementById("resTime").innerText = now.toLocaleTimeString(
+          [],
+          { hour: "2-digit", minute: "2-digit" }
+        );
+      }
+
+      // Initialize
+      renderInputs();
+      update();
+    </script>
+  </body>
+</html>

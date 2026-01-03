@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Modular Receipt Designer</title>
+    <style>
+      :root {
+        --paper-width: 320px;
+      }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #f0f2f5;
+        margin: 0;
+        display: flex;
+        height: 100vh;
+      }
+
+      /* EDITOR SIDEBAR */
+      .editor {
+        width: 450px;
+        background: white;
+        padding: 20px;
+        overflow-y: auto;
+        border-right: 1px solid #ddd;
+      }
+      .section-box {
+        background: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        position: relative;
+      }
+      .remove-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        color: red;
+        cursor: pointer;
+        font-weight: bold;
+        border: none;
+        background: none;
+      }
+
+      label {
+        display: block;
+        font-size: 11px;
+        font-weight: bold;
+        color: #555;
+        margin: 8px 0 4px;
+        text-transform: uppercase;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-family: inherit;
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .btn {
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        flex: 1;
+      }
+      .btn-add {
+        background: #007bff;
+        color: white;
+      }
+      .btn-export {
+        background: #000;
+        color: white;
+        width: 100%;
+        font-size: 16px;
+        margin-top: 10px;
+      }
+
+      /* RECEIPT PREVIEW */
+      .preview {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 40px;
+        background: #525659;
+        overflow-y: auto;
+      }
+      #receipt {
+        width: var(--paper-width);
+        background: white;
+        padding: 20px;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 13px;
+        color: #000;
+      }
+
+      .logo-wrap {
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      .logo-wrap img {
+        max-width: 120px;
+        filter: grayscale(1);
+      }
+
+      .centered {
+        text-align: center;
+      }
+      .item-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 2px 0;
+      }
+      .qty-col {
+        width: 30px;
+      }
+      .name-col {
+        flex: 1;
+      }
+      .price-col {
+        width: 80px;
+        text-align: right;
+      }
+
+      /* DIVIDER STYLES */
+      .div-none {
+        margin: 10px 0;
+      }
+      .div-dashed {
+        border-top: 1px dashed #000;
+        margin: 10px 0;
+      }
+      .div-dotted {
+        border-top: 2px dotted #000;
+        margin: 10px 0;
+      }
+      .div-solid {
+        border-top: 1px solid #000;
+        margin: 10px 0;
+      }
+      .div-double {
+        border-top: 3px double #000;
+        margin: 10px 0;
+        border-bottom: none;
+        height: 0;
+      }
+      .div-bold {
+        border-top: 3px solid #000;
+        margin: 10px 0;
+      }
+
+      @media print {
+        .editor {
+          display: none;
+        }
+        .preview {
+          background: white;
+          padding: 0;
+        }
+        #receipt {
+          box-shadow: none;
+          width: 80mm;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="editor">
+      <h2>Receipt Builder</h2>
+
+      <div class="section-box">
+        <label>Shop Logo</label>
+        <input type="file" accept="image/*" onchange="updateLogo(this)" />
+      </div>
+
+      <div id="editor-sections"></div>
+
+      <div class="controls">
+        <button class="btn btn-add" onclick="addSection('text')">
+          + Add Text Section
+        </button>
+        <button class="btn btn-add" onclick="addSection('items')">
+          + Add Item List
+        </button>
+      </div>
+
+      <div class="section-box">
+        <label>VAT %</label>
+        <input type="number" id="vatInput" value="5" oninput="render()" />
+      </div>
+
+      <button class="btn btn-export" onclick="window.print()">
+        PRINT / EXPORT PDF
+      </button>
+    </div>
+
+    <div class="preview">
+      <div id="receipt">
+        <div class="logo-wrap" id="logoPreview" style="display: none">
+          <img id="logoImg" src="" />
+        </div>
+        <div id="receipt-content"></div>
+      </div>
+    </div>
+
+    <script>
+      let sections = [
+        {
+          id: 1,
+          type: "text",
+          content: "NORTH END COFFEE\nGulshan, Dhaka",
+          align: "centered",
+          divider: "dashed",
+        },
+        {
+          id: 2,
+          type: "items",
+          items: [{ qty: 1, name: "Latte", price: 280.5 }],
+          divider: "double",
+        },
+      ];
+
+      function updateLogo(input) {
+        if (input.files && input.files[0]) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            document.getElementById("logoImg").src = e.target.result;
+            document.getElementById("logoPreview").style.display = "block";
+          };
+          reader.readAsDataURL(input.files[0]);
+        }
+      }
+
+      function addSection(type) {
+        const id = Date.now();
+        if (type === "text") {
+          sections.push({
+            id,
+            type: "text",
+            content: "New Section",
+            align: "centered",
+            divider: "dashed",
+          });
+        } else {
+          sections.push({
+            id,
+            type: "items",
+            items: [{ qty: 1, name: "New Item", price: 0 }],
+            divider: "solid",
+          });
+        }
+        render();
+      }
+
+      function removeSection(id) {
+        sections = sections.filter((s) => s.id !== id);
+        render();
+      }
+
+      function addItem(sectionId) {
+        const section = sections.find((s) => s.id === sectionId);
+        section.items.push({ qty: 1, name: "", price: 0 });
+        render();
+      }
+
+      function render() {
+        renderEditor();
+        renderReceipt();
+      }
+
+      function renderEditor() {
+        const container = document.getElementById("editor-sections");
+        container.innerHTML = "";
+
+        sections.forEach((s, idx) => {
+          const box = document.createElement("div");
+          box.className = "section-box";
+
+          let html = `<button class="remove-btn" onclick="removeSection(${s.id})">✕</button>`;
+          html += `<label>Section ${idx + 1} (${s.type})</label>`;
+
+          if (s.type === "text") {
+            html += `<textarea oninput="sections[${idx}].content=this.value; render()">${s.content}</textarea>`;
+            html += `<select onchange="sections[${idx}].align=this.value; render()">
+                            <option value="centered" ${
+                              s.align === "centered" ? "selected" : ""
+                            }>Centered</option>
+                            <option value="left" ${
+                              s.align === "left" ? "selected" : ""
+                            }>Left Aligned</option>
+                         </select>`;
+          } else {
+            s.items.forEach((item, iIdx) => {
+              html += `<div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <input type="number" style="width:50px" value="${item.qty}" oninput="sections[${idx}].items[${iIdx}].qty=this.value; render()">
+                        <input type="text" value="${item.name}" placeholder="Item Name" oninput="sections[${idx}].items[${iIdx}].name=this.value; render()">
+                        <input type="number" style="width:80px" value="${item.price}" oninput="sections[${idx}].items[${iIdx}].price=this.value; render()">
+                    </div>`;
+            });
+            html += `<button class="btn" style="font-size:11px" onclick="addItem(${s.id})">+ Add Line</button>`;
+          }
+
+          html += `<label>End Divider Style</label>
+                <select onchange="sections[${idx}].divider=this.value; render()">
+                    <option value="none" ${
+                      s.divider === "none" ? "selected" : ""
+                    }>None</option>
+                    <option value="dashed" ${
+                      s.divider === "dashed" ? "selected" : ""
+                    }>Dashed (---)</option>
+                    <option value="dotted" ${
+                      s.divider === "dotted" ? "selected" : ""
+                    }>Dotted (...)</option>
+                    <option value="solid" ${
+                      s.divider === "solid" ? "selected" : ""
+                    }>Solid (___)</option>
+                    <option value="double" ${
+                      s.divider === "double" ? "selected" : ""
+                    }>Double (===)</option>
+                    <option value="bold" ${
+                      s.divider === "bold" ? "selected" : ""
+                    }>Bold Solid</option>
+                </select>`;
+
+          box.innerHTML = html;
+          container.appendChild(box);
+        });
+      }
+
+      function renderReceipt() {
+        const container = document.getElementById("receipt-content");
+        container.innerHTML = "";
+        let gross = 0;
+
+        sections.forEach((s) => {
+          const div = document.createElement("div");
+          if (s.type === "text") {
+            div.className = s.align === "centered" ? "centered" : "";
+            div.style.whiteSpace = "pre-line";
+            div.innerText = s.content;
+          } else {
+            let itemsHtml = `<div class="item-row" style="font-weight:bold"><span>QTY</span><span>ITEM</span><span>TOTAL</span></div>`;
+            s.items.forEach((item) => {
+              const total = (item.qty || 0) * (item.price || 0);
+              gross += total;
+              itemsHtml += `<div class="item-row">
+                        <span class="qty-col">${item.qty}</span>
+                        <span class="name-col">${item.name}</span>
+                        <span class="price-col">${total.toFixed(2)}</span>
+                    </div>`;
+            });
+            div.innerHTML = itemsHtml;
+          }
+
+          container.appendChild(div);
+
+          // Add the selected divider
+          const divider = document.createElement("div");
+          divider.className = `div-${s.divider}`;
+          container.appendChild(divider);
+        });
+
+        // Totals Section
+        const vatRate =
+          parseFloat(document.getElementById("vatInput").value) || 0;
+        const vatAmt = gross * (vatRate / 100);
+        const total = gross + vatAmt;
+
+        const totalDiv = document.createElement("div");
+        totalDiv.innerHTML = `
+            <div class="item-row"><span>Gross Total:</span><span>${gross.toFixed(
+              2
+            )}</span></div>
+            <div class="item-row"><span>VAT (${vatRate}%):</span><span>${vatAmt.toFixed(
+          2
+        )}</span></div>
+            <div class="item-row" style="font-weight:bold; font-size:1.2em"><span>TOTAL:</span><span>${total.toFixed(
+              2
+            )}</span></div>
+            <div class="div-bold"></div>
+            <div class="centered">PAID - THANK YOU</div>
+        `;
+        container.appendChild(totalDiv);
+      }
+
+      // Init
+      render();
+    </script>
+  </body>
+</html>

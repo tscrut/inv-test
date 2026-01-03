@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hongbao Receipt Editor</title>
+    <style>
+      body {
+        background-color: #f0f0f0;
+        font-family: "Courier New", Courier, monospace;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+      }
+
+      /* The Receipt Container */
+      #receipt {
+        background-color: white;
+        width: 380px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        color: #333;
+        line-height: 1.2;
+      }
+
+      .center {
+        text-align: center;
+      }
+      .bold {
+        font-weight: bold;
+        font-size: 1.2em;
+      }
+      .dashed-line {
+        border-top: 1px dashed #444;
+        margin: 10px 0;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        font-size: 0.9em;
+        margin-bottom: 10px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95em;
+      }
+
+      th {
+        text-align: left;
+        border-bottom: 1px dashed #444;
+        padding-bottom: 5px;
+      }
+      td {
+        padding: 4px 0;
+        vertical-align: top;
+      }
+      .price-col {
+        text-align: right;
+      }
+      .qty-col {
+        width: 30px;
+      }
+
+      .totals-table {
+        width: 100%;
+        margin-top: 5px;
+      }
+      .totals-table td {
+        text-align: right;
+      }
+      .totals-table td:first-child {
+        text-align: left;
+        width: 70%;
+      }
+
+      /* Editing features */
+      [contenteditable="true"]:hover {
+        background-color: #ffffd0;
+        outline: 1px solid #ccc;
+      }
+
+      .controls {
+        margin-bottom: 20px;
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        display: flex;
+        gap: 10px;
+      }
+
+      button {
+        padding: 8px 15px;
+        cursor: pointer;
+        background: #333;
+        color: white;
+        border: none;
+        border-radius: 4px;
+      }
+
+      button:hover {
+        background: #555;
+      }
+
+      /* Print styling */
+      @media print {
+        .controls,
+        .add-row-btn {
+          display: none;
+        }
+        body {
+          background: white;
+          padding: 0;
+        }
+        #receipt {
+          box-shadow: none;
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="controls">
+      <button onclick="addItem()">+ Add Item</button>
+      <button onclick="window.print()">Print Receipt</button>
+    </div>
+
+    <div id="receipt">
+      <div class="center">
+        <div class="bold" contenteditable="true">Hongbao</div>
+        <div contenteditable="true">65, Gulshan Avenue</div>
+        <div contenteditable="true">(Suvastu Imam Square)</div>
+        <div contenteditable="true">Gulshan-1, Dhaka-1212</div>
+        <div contenteditable="true">Hotline: 01870111222, 01811533039</div>
+      </div>
+
+      <div class="dashed-line"></div>
+      <div class="center" style="font-size: 0.8em" contenteditable="true">
+        BIN: 002499744-0101 MUSAK-6.3, Rule 16(1)
+      </div>
+      <div class="dashed-line"></div>
+
+      <div class="info-grid">
+        <div contenteditable="true">Table: F 29</div>
+        <div style="text-align: right" contenteditable="true">
+          Served By: Arif
+        </div>
+      </div>
+
+      <div class="center bold" style="letter-spacing: 5px; margin: 5px 0">
+        Invoice
+      </div>
+
+      <div class="info-grid">
+        <div contenteditable="true">Date: 08/12/2025</div>
+        <div style="text-align: right" contenteditable="true">
+          Time: 08:36:35 PM
+        </div>
+        <div contenteditable="true">Order ID: 110011805</div>
+        <div style="text-align: right" contenteditable="true">Covers: 3</div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th class="qty-col">Qty</th>
+            <th>Item Name</th>
+            <th class="price-col">Price</th>
+          </tr>
+        </thead>
+        <tbody id="item-list">
+          <tr>
+            <td class="qty-col" contenteditable="true">1</td>
+            <td contenteditable="true">Crispy Tiger Prawns</td>
+            <td class="price-col" contenteditable="true">1590</td>
+          </tr>
+          <tr>
+            <td class="qty-col" contenteditable="true">1</td>
+            <td contenteditable="true">MÃ¡ PÃ³ Dumpling</td>
+            <td class="price-col" contenteditable="true">690</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="dashed-line"></div>
+
+      <table class="totals-table">
+        <tr>
+          <td class="bold">Order Total:</td>
+          <td class="bold" contenteditable="true">9720</td>
+        </tr>
+        <tr>
+          <td contenteditable="true">S Charge (10%):</td>
+          <td contenteditable="true">972</td>
+        </tr>
+        <tr>
+          <td contenteditable="true">VAT (5%):</td>
+          <td contenteditable="true">534.6</td>
+        </tr>
+      </table>
+
+      <div class="dashed-line"></div>
+
+      <table class="totals-table">
+        <tr class="bold">
+          <td>Total Payable:</td>
+          <td contenteditable="true">11226.6</td>
+        </tr>
+      </table>
+
+      <div class="dashed-line"></div>
+      <div class="dashed-line"></div>
+      <div class="center" style="margin-top: 10px" contenteditable="true">
+        Thank You
+      </div>
+    </div>
+
+    <script>
+      function addItem() {
+        const tbody = document.getElementById("item-list");
+        const row = document.createElement("tr");
+        row.innerHTML = `
+                <td class="qty-col" contenteditable="true">1</td>
+                <td contenteditable="true">New Item Name</td>
+                <td class="price-col" contenteditable="true">0</td>
+            `;
+        tbody.appendChild(row);
+      }
+    </script>
+  </body>
+</html>

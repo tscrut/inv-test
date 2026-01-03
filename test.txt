@@ -1,0 +1,3 @@
+Hello Thermal Printer
+---------------------
+Item A   100

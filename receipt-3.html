@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Receipt Editor</title>
+
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, monospace;
+        display: flex;
+        height: 100vh;
+        background: #f2f2f2;
+      }
+
+      /* Editor */
+      .editor {
+        width: 30%;
+        padding: 15px;
+        background: #ffffff;
+        overflow-y: auto;
+        border-right: 1px solid #ccc;
+      }
+
+      .editor label {
+        font-size: 13px;
+        font-weight: bold;
+        margin-top: 10px;
+        display: block;
+      }
+
+      .editor input,
+      .editor textarea,
+      .editor select {
+        width: 100%;
+        margin-top: 5px;
+        padding: 6px;
+        font-size: 13px;
+      }
+
+      .editor button {
+        margin-top: 15px;
+        width: 100%;
+        padding: 10px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      /* Preview */
+      .preview-wrapper {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 20px;
+      }
+
+      .receipt {
+        width: 280px; /* ~80mm */
+        background: #fff;
+        padding: 10px;
+        font-size: 13px;
+      }
+
+      .center {
+        text-align: center;
+      }
+      .bold {
+        font-weight: bold;
+      }
+
+      hr {
+        border: none;
+        border-top: 1px dashed #000;
+        margin: 6px 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      td {
+        padding: 2px 0;
+        vertical-align: top;
+      }
+
+      .right {
+        text-align: right;
+      }
+
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        .receipt,
+        .receipt * {
+          visibility: visible;
+        }
+        .receipt {
+          position: absolute;
+          left: 0;
+          top: 0;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- EDITOR -->
+    <div class="editor">
+      <h3>Receipt Editor</h3>
+
+      <label>Restaurant Name</label>
+      <input id="name" value="Hongbao" oninput="update()" />
+
+      <label>Address</label>
+      <textarea id="address" rows="3" oninput="update()">
+65, Gulshan Avenue
+(Suvastu Imam Square)
+Dhaka-1212</textarea
+      >
+
+      <label>Invoice Title</label>
+      <input id="title" value="Invoice" oninput="update()" />
+
+      <label>Items (qty,name,price)</label>
+      <textarea id="items" rows="7" oninput="update()">
+1,Crispy Tiger Prawns,1500
+1,MA PA Dumpling,690
+2,Chicken Dumpling,1500
+1,Xiao Long Bao Dim Sum,850
+  </textarea
+      >
+
+      <label>Service Charge (%)</label>
+      <input type="number" id="service" value="10" oninput="update()" />
+
+      <label>VAT (%)</label>
+      <input type="number" id="vat" value="5" oninput="update()" />
+
+      <label>Font</label>
+      <select id="font" onchange="update()">
+        <option value="monospace">Monospace</option>
+        <option value="Arial">Arial</option>
+        <option value="Courier New">Courier New</option>
+      </select>
+
+      <button onclick="window.print()">🖨 Print Receipt</button>
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="preview-wrapper">
+      <div class="receipt" id="receipt"></div>
+    </div>
+
+    <script>
+      function update() {
+        const name = document.getElementById("name").value;
+        const address = document
+          .getElementById("address")
+          .value.replace(/\n/g, "<br>");
+        const title = document.getElementById("title").value;
+        const itemsRaw = document.getElementById("items").value.trim();
+        const serviceRate = parseFloat(
+          document.getElementById("service").value
+        );
+        const vatRate = parseFloat(document.getElementById("vat").value);
+        const font = document.getElementById("font").value;
+
+        let total = 0;
+        let rows = "";
+
+        itemsRaw.split("\n").forEach((line) => {
+          const [qty, name, price] = line.split(",");
+          const amount = parseFloat(price);
+          total += amount;
+          rows += `
+      <tr>
+        <td>${qty}</td>
+        <td>${name}</td>
+        <td class="right">${amount}</td>
+      </tr>`;
+        });
+
+        const service = (total * serviceRate) / 100;
+        const vat = (total * vatRate) / 100;
+        const payable = total + service + vat;
+
+        document.getElementById("receipt").style.fontFamily = font;
+
+        document.getElementById("receipt").innerHTML = `
+    <div class="center bold">${name}</div>
+    <div class="center">${address}</div>
+    <hr>
+    <div class="center bold">${title}</div>
+    <hr>
+
+    <table>
+      <tr class="bold">
+        <td>Qty</td>
+        <td>Item</td>
+        <td class="right">Price</td>
+      </tr>
+      ${rows}
+    </table>
+
+    <hr>
+    <table>
+      <tr><td>Total</td><td class="right">${total.toFixed(2)}</td></tr>
+      <tr><td>Service (${serviceRate}%)</td><td class="right">${service.toFixed(
+          2
+        )}</td></tr>
+      <tr><td>VAT (${vatRate}%)</td><td class="right">${vat.toFixed(
+          2
+        )}</td></tr>
+    </table>
+
+    <hr>
+    <div class="bold right">Payable: ${payable.toFixed(2)}</div>
+    <hr>
+    <div class="center">Thank You</div>
+  `;
+      }
+
+      update();
+    </script>
+  </body>
+</html>
