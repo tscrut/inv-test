@@ -388,10 +388,10 @@ Gulshan-2, Dhaka
           <input type="number" id="covers" value="6" />
         </div>
 
-        <div class="form-group">
+        <!-- <div class="form-group">
           <label>Order ID</label>
           <input type="text" id="orderId" value="220050992" />
-        </div>
+        </div> -->
 
         <div class="items-section">
           <h3>Items</h3>
@@ -500,10 +500,10 @@ Gulshan-2, Dhaka
         const hotline = document.getElementById("hotline").value;
         const bin = document.getElementById("bin").value;
         const table = document.getElementById("table").value;
-        const servedBy = document.getElementById("servedBy").value;
+        // const servedBy = document.getElementById("servedBy").value;
         const datetime = document.getElementById("datetime").value;
         const covers = document.getElementById("covers").value;
-        const orderId = document.getElementById("orderId").value;
+        // const orderId = document.getElementById("orderId").value;
         const serviceChargePercent =
           parseFloat(document.getElementById("serviceCharge").value) || 0;
         const vatPercent =
@@ -548,7 +548,6 @@ Gulshan-2, Dhaka
 
                 <div class="receipt-info">
                     <div>Date: ${date}&nbsp;&nbsp;Time: ${time}</div>
-                    <div>Order ID: ${orderId}</div>
                 </div>
 
                 <div class="receipt-divider"></div>
