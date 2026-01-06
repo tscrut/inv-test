@@ -1,233 +1,613 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Hongbao Receipt Editor</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt Editor</title>
     <style>
-      body {
-        background-color: #f0f0f0;
-        font-family: "Courier New", Courier, monospace;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-      }
-
-      /* The Receipt Container */
-      #receipt {
-        background-color: white;
-        width: 380px;
-        padding: 20px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        color: #333;
-        line-height: 1.2;
-      }
-
-      .center {
-        text-align: center;
-      }
-      .bold {
-        font-weight: bold;
-        font-size: 1.2em;
-      }
-      .dashed-line {
-        border-top: 1px dashed #444;
-        margin: 10px 0;
-      }
-
-      .info-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        font-size: 0.9em;
-        margin-bottom: 10px;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.95em;
-      }
-
-      th {
-        text-align: left;
-        border-bottom: 1px dashed #444;
-        padding-bottom: 5px;
-      }
-      td {
-        padding: 4px 0;
-        vertical-align: top;
-      }
-      .price-col {
-        text-align: right;
-      }
-      .qty-col {
-        width: 30px;
-      }
-
-      .totals-table {
-        width: 100%;
-        margin-top: 5px;
-      }
-      .totals-table td {
-        text-align: right;
-      }
-      .totals-table td:first-child {
-        text-align: left;
-        width: 70%;
-      }
-
-      /* Editing features */
-      [contenteditable="true"]:hover {
-        background-color: #ffffd0;
-        outline: 1px solid #ccc;
-      }
-
-      .controls {
-        margin-bottom: 20px;
-        background: white;
-        padding: 15px;
-        border-radius: 8px;
-        display: flex;
-        gap: 10px;
-      }
-
-      button {
-        padding: 8px 15px;
-        cursor: pointer;
-        background: #333;
-        color: white;
-        border: none;
-        border-radius: 4px;
-      }
-
-      button:hover {
-        background: #555;
-      }
-
-      /* Print styling */
-      @media print {
-        .controls,
-        .add-row-btn {
-          display: none;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+
         body {
-          background: white;
-          padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
         }
-        #receipt {
-          box-shadow: none;
-          width: 100%;
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
-      }
+
+        .editor-panel, .preview-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .editor-panel {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #555;
+            font-size: 16px;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            font-size: 13px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .style-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .items-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 40px;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: end;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+        }
+
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #0b7dda;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+            padding: 8px 12px;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 5px;
+        }
+
+        /* Receipt Preview Styles */
+        .receipt-preview {
+            width: 80mm;
+            background: white;
+            padding: 10px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+        }
+
+        .receipt-divider {
+            border-bottom: 1px dashed #333;
+            margin: 8px 0;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .editor-panel {
+                display: none;
+            }
+
+            .preview-panel {
+                box-shadow: none;
+                padding: 0;
+            }
+
+            .container {
+                display: block;
+            }
+
+            .btn-group {
+                display: none;
+            }
+
+            @page {
+                size: 80mm auto;
+                margin: 0;
+            }
+
+            .receipt-preview {
+                border: none;
+                width: 80mm;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
-  </head>
-  <body>
-    <div class="controls">
-      <button onclick="addItem()">+ Add Item</button>
-      <button onclick="window.print()">Print Receipt</button>
-    </div>
+</head>
+<body>
+    <div class="container">
+        <div class="editor-panel">
+            <h2>Receipt Editor</h2>
+            
+            <h3>Business Information</h3>
+            <div class="form-group">
+                <label>Business Name:</label>
+                <input type="text" id="businessName" value="The Chocolate Room">
+            </div>
 
-    <div id="receipt">
-      <div class="center">
-        <div class="bold" contenteditable="true">Hongbao</div>
-        <div contenteditable="true">65, Gulshan Avenue</div>
-        <div contenteditable="true">(Suvastu Imam Square)</div>
-        <div contenteditable="true">Gulshan-1, Dhaka-1212</div>
-        <div contenteditable="true">Hotline: 01870111222, 01811533039</div>
-      </div>
+            <div class="form-group">
+                <label>Address:</label>
+                <textarea id="address">Plot # SE(C)2, Road # 138, Ground Floor
+Gulshan 1, Dhaka-1212
+Phone#01911-554-464,01911-554-465
+BIN No-001848536-0101, Mushak 6.3</textarea>
+            </div>
 
-      <div class="dashed-line"></div>
-      <div class="center" style="font-size: 0.8em" contenteditable="true">
-        BIN: 002499744-0101 MUSAK-6.3, Rule 16(1)
-      </div>
-      <div class="dashed-line"></div>
+            <h3>Header Style</h3>
+            <div class="style-grid">
+                <div class="form-group">
+                    <label>Font Family:</label>
+                    <select id="headerFont">
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="'Lucida Console', monospace">Lucida Console</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Font Size (px):</label>
+                    <input type="number" id="headerSize" value="16" min="8" max="32">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Text Align:</label>
+                <select id="headerAlign">
+                    <option value="center">Center</option>
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                </select>
+            </div>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="headerBold" checked> Bold</label>
+                <label><input type="checkbox" id="headerItalic"> Italic</label>
+                <label><input type="checkbox" id="headerUnderline"> Underline</label>
+            </div>
 
-      <div class="info-grid">
-        <div contenteditable="true">Table: F 29</div>
-        <div style="text-align: right" contenteditable="true">
-          Served By: Arif
+            <h3>Address Style</h3>
+            <div class="style-grid">
+                <div class="form-group">
+                    <label>Font Family:</label>
+                    <select id="addressFont">
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="'Lucida Console', monospace">Lucida Console</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Font Size (px):</label>
+                    <input type="number" id="addressSize" value="11" min="8" max="24">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Text Align:</label>
+                <select id="addressAlign">
+                    <option value="center">Center</option>
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                </select>
+            </div>
+
+            <h3>Receipt Details</h3>
+            <div class="form-group">
+                <label>Table:</label>
+                <input type="text" id="table" value="W-2">
+            </div>
+
+            <div class="form-group">
+                <label>Waiter:</label>
+                <input type="text" id="waiter" value="Sakila">
+            </div>
+
+            <div class="form-group">
+                <label>Date:</label>
+                <input type="date" id="date">
+            </div>
+
+            <div class="form-group">
+                <label>Time:</label>
+                <input type="time" id="time">
+            </div>
+
+            <div class="form-group">
+                <label>Chalan No:</label>
+                <input type="text" id="chalanNo" value="6429">
+            </div>
+
+            <h3>Info Section Style</h3>
+            <div class="style-grid">
+                <div class="form-group">
+                    <label>Font Family:</label>
+                    <select id="infoFont">
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Font Size (px):</label>
+                    <input type="number" id="infoSize" value="11" min="8" max="20">
+                </div>
+            </div>
+
+            <h3>Items</h3>
+            <div class="items-section">
+                <div id="itemsContainer">
+                    <div class="item-row">
+                        <input type="text" placeholder="Item Name" class="item-name-input" value="Iced Tea">
+                        <input type="number" placeholder="Qty" class="item-qty" value="1" min="1">
+                        <input type="number" placeholder="Price" class="item-price-input" value="519.05" step="0.01">
+                        <button class="btn btn-danger" onclick="removeItem(this)">×</button>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="addItem()">+ Add Item</button>
+            </div>
+
+            <h3>Items Table Style</h3>
+            <div class="style-grid">
+                <div class="form-group">
+                    <label>Font Family:</label>
+                    <select id="itemsFont">
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Font Size (px):</label>
+                    <input type="number" id="itemsSize" value="11" min="8" max="20">
+                </div>
+            </div>
+
+            <h3>Totals</h3>
+            <div class="form-group">
+                <label>VAT %:</label>
+                <input type="number" id="vatPercent" value="5.00" step="0.01">
+            </div>
+
+            <div class="form-group">
+                <label>Auto Round %:</label>
+                <input type="number" id="autoRound" value="1.00" step="0.01">
+            </div>
+
+            <h3>Totals Style</h3>
+            <div class="style-grid">
+                <div class="form-group">
+                    <label>Font Family:</label>
+                    <select id="totalsFont">
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Font Size (px):</label>
+                    <input type="number" id="totalsSize" value="12" min="8" max="20">
+                </div>
+            </div>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="totalsBold" checked> Bold</label>
+            </div>
+
+            <h3>Footer</h3>
+            <div class="form-group">
+                <label>Footer Text:</label>
+                <textarea id="footerText">All Prices Are Included Tax
+THANK YOU,COME AGAIN
+Powered by:3S,www.3ssoftltd</textarea>
+            </div>
+
+            <h3>Footer Style</h3>
+            <div class="style-grid">
+                <div class="form-group">
+                    <label>Font Family:</label>
+                    <select id="footerFont">
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Font Size (px):</label>
+                    <input type="number" id="footerSize" value="11" min="8" max="20">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Text Align:</label>
+                <select id="footerAlign">
+                    <option value="center">Center</option>
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                </select>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="updatePreview()">Update Preview</button>
+            </div>
         </div>
-      </div>
 
-      <div class="center bold" style="letter-spacing: 5px; margin: 5px 0">
-        Invoice
-      </div>
-
-      <div class="info-grid">
-        <div contenteditable="true">Date: 08/12/2025</div>
-        <div style="text-align: right" contenteditable="true">
-          Time: 08:36:35 PM
+        <div class="preview-panel">
+            <h2>Preview</h2>
+            <div id="receiptPreview" class="receipt-preview"></div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="window.print()">Print Receipt</button>
+            </div>
         </div>
-        <div contenteditable="true">Order ID: 110011805</div>
-        <div style="text-align: right" contenteditable="true">Covers: 3</div>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th class="qty-col">Qty</th>
-            <th>Item Name</th>
-            <th class="price-col">Price</th>
-          </tr>
-        </thead>
-        <tbody id="item-list">
-          <tr>
-            <td class="qty-col" contenteditable="true">1</td>
-            <td contenteditable="true">Crispy Tiger Prawns</td>
-            <td class="price-col" contenteditable="true">1590</td>
-          </tr>
-          <tr>
-            <td class="qty-col" contenteditable="true">1</td>
-            <td contenteditable="true">MÃ¡ PÃ³ Dumpling</td>
-            <td class="price-col" contenteditable="true">690</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="dashed-line"></div>
-
-      <table class="totals-table">
-        <tr>
-          <td class="bold">Order Total:</td>
-          <td class="bold" contenteditable="true">9720</td>
-        </tr>
-        <tr>
-          <td contenteditable="true">S Charge (10%):</td>
-          <td contenteditable="true">972</td>
-        </tr>
-        <tr>
-          <td contenteditable="true">VAT (5%):</td>
-          <td contenteditable="true">534.6</td>
-        </tr>
-      </table>
-
-      <div class="dashed-line"></div>
-
-      <table class="totals-table">
-        <tr class="bold">
-          <td>Total Payable:</td>
-          <td contenteditable="true">11226.6</td>
-        </tr>
-      </table>
-
-      <div class="dashed-line"></div>
-      <div class="dashed-line"></div>
-      <div class="center" style="margin-top: 10px" contenteditable="true">
-        Thank You
-      </div>
     </div>
 
     <script>
-      function addItem() {
-        const tbody = document.getElementById("item-list");
-        const row = document.createElement("tr");
-        row.innerHTML = `
-                <td class="qty-col" contenteditable="true">1</td>
-                <td contenteditable="true">New Item Name</td>
-                <td class="price-col" contenteditable="true">0</td>
+        function addItem() {
+            const container = document.getElementById('itemsContainer');
+            const itemRow = document.createElement('div');
+            itemRow.className = 'item-row';
+            itemRow.innerHTML = `
+                <input type="text" placeholder="Item Name" class="item-name-input">
+                <input type="number" placeholder="Qty" class="item-qty" value="1" min="1">
+                <input type="number" placeholder="Price" class="item-price-input" step="0.01">
+                <button class="btn btn-danger" onclick="removeItem(this)">×</button>
             `;
-        tbody.appendChild(row);
-      }
+            container.appendChild(itemRow);
+        }
+
+        function removeItem(button) {
+            button.parentElement.remove();
+            updatePreview();
+        }
+
+        function formatNumber(num) {
+            return parseFloat(num).toFixed(2);
+        }
+
+        function getStyle(section) {
+            const font = document.getElementById(`${section}Font`).value;
+            const size = document.getElementById(`${section}Size`).value;
+            const align = document.getElementById(`${section}Align`)?.value || 'left';
+            
+            let style = `font-family: ${font}; font-size: ${size}px; text-align: ${align};`;
+            
+            // Check for bold, italic, underline (if they exist for this section)
+            const bold = document.getElementById(`${section}Bold`);
+            const italic = document.getElementById(`${section}Italic`);
+            const underline = document.getElementById(`${section}Underline`);
+            
+            if (bold && bold.checked) style += ' font-weight: bold;';
+            if (italic && italic.checked) style += ' font-style: italic;';
+            if (underline && underline.checked) style += ' text-decoration: underline;';
+            
+            return style;
+        }
+
+        function updatePreview() {
+            const businessName = document.getElementById('businessName').value;
+            const address = document.getElementById('address').value;
+            const table = document.getElementById('table').value;
+            const waiter = document.getElementById('waiter').value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+            const chalanNo = document.getElementById('chalanNo').value;
+            const vatPercent = parseFloat(document.getElementById('vatPercent').value) || 0;
+            const autoRound = parseFloat(document.getElementById('autoRound').value) || 0;
+            const footerText = document.getElementById('footerText').value;
+
+            // Get styles
+            const headerStyle = getStyle('header');
+            const addressStyle = getStyle('address');
+            const infoStyle = getStyle('info');
+            const itemsStyle = getStyle('items');
+            const totalsStyle = getStyle('totals');
+            const footerStyle = getStyle('footer');
+
+            // Get all items
+            const itemRows = document.querySelectorAll('.item-row');
+            let itemsHTML = '';
+            let grossTotal = 0;
+
+            itemRows.forEach(row => {
+                const name = row.querySelector('.item-name-input').value;
+                const qty = parseInt(row.querySelector('.item-qty').value) || 1;
+                const price = parseFloat(row.querySelector('.item-price-input').value) || 0;
+                const total = qty * price;
+                grossTotal += total;
+
+                if (name) {
+                    itemsHTML += `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                            <span>${qty}-${name}</span>
+                            <span style="text-align: right; min-width: 70px;">${formatNumber(price)} ${formatNumber(total)}</span>
+                        </div>
+                    `;
+                }
+            });
+
+            // Calculate totals
+            const vatAmount = (grossTotal * vatPercent) / 100;
+            const autoRoundAmount = 0.00;
+            const netTotal = grossTotal + vatAmount + autoRoundAmount;
+
+            // Format date and time
+            const dateObj = date ? new Date(date) : new Date();
+            const formattedDate = dateObj.toLocaleDateString('en-GB').replace(/\//g, '/');
+            const formattedTime = time || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+            const receipt = `
+                <div style="${headerStyle} margin-bottom: 5px;">
+                    ${businessName}
+                </div>
+                <div style="${addressStyle}">
+                    ${address.replace(/\n/g, '<br>')}
+                </div>
+                
+                <div class="receipt-divider"></div>
+                
+                <div style="${infoStyle}">
+                    Table: ${table}<br>
+                    Waiter:${waiter}<br>
+                    <span style="margin-left: 60px;">Guest Bill</span><br>
+                    Sale<br>
+                    Date:${formattedDate}<span style="float:right;">Time:${formattedTime}</span><br>
+                    Number Of Guests:0<br>
+                    Chalan No:${chalanNo}
+                </div>
+                
+                <div class="receipt-divider"></div>
+                
+                <div style="${itemsStyle}">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #333; padding-bottom: 3px; margin-bottom: 5px;">
+                        <span>Qty Item Name</span>
+                        <span>U.Price T.Price</span>
+                    </div>
+                    ${itemsHTML}
+                </div>
+                
+                <div style="${totalsStyle}">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #333; border-top: 1px dashed #333; padding: 5px 0; margin: 5px 0;">
+                        <span>GROSS Total:</span>
+                        <span>${formatNumber(grossTotal)}</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; font-weight: normal; margin-top: 8px; margin-bottom: 3px;">
+                        <span>-Vat${formatNumber(vatPercent)}%:</span>
+                        <span>${formatNumber(vatAmount)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-weight: normal; margin-bottom: 3px;">
+                        <span>-Auto Round +${formatNumber(autoRound)}%:</span>
+                        <span>${formatNumber(autoRoundAmount)}</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; border-top: 1px dashed #333; border-bottom: 1px dashed #333; padding: 5px 0; margin: 5px 0;">
+                        <span>NET Total:</span>
+                        <span>${formatNumber(netTotal)}</span>
+                    </div>
+                </div>
+                
+                <div style="${footerStyle} margin-top: 10px; border-top: 1px dashed #333; padding-top: 8px;">
+                    ${footerText.replace(/\n/g, '<br>')}
+                </div>
+            `;
+
+            document.getElementById('receiptPreview').innerHTML = receipt;
+        }
+
+        // Initialize with current date and time
+        window.onload = function() {
+            const now = new Date();
+            document.getElementById('date').valueAsDate = now;
+            document.getElementById('time').value = now.toTimeString().slice(0, 5);
+            updatePreview();
+        };
+
+        // Auto-update preview when inputs change
+        document.addEventListener('input', updatePreview);
+        document.addEventListener('change', updatePreview);
     </script>
-  </body>
+</body>
 </html>
